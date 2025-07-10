@@ -1,0 +1,69 @@
+<h1 mat-dialog-title [ngSwitch]="isNew">
+    <span *ngSwitchCase="true">
+        Add new game category
+    </span>
+
+    <span *ngSwitchCase="false">
+        Edit game category {{ pristineCategory.name }} (#{{ pristineCategory.id }})
+    </span>
+</h1>
+
+<div mat-dialog-content>
+    <form class="m-form m-form--fit" [ngClass]="{ dimmed: loading$ | async }" *ngIf="category">
+        <fieldset [disabled]="loading$ | async">
+            <m-alert [(message)]="errorMessage" kind="danger"></m-alert>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-1">
+                <mat-form-field class="example-full-width">
+                    <input
+                        type="text"
+                        required
+                        matInput
+                        name="categoryName"
+                        placeholder="Category name"
+                        [(ngModel)]="category.name">
+                </mat-form-field>
+            </div>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-1">
+                <mat-form-field class="example-full-width">
+                    <input
+                        type="text"
+                        matInput
+                        multiple
+                        name="categoryDescription"
+                        placeholder="Describe game category briefly"
+                        [(ngModel)]="category.description">
+                </mat-form-field>
+            </div>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-1">
+                <mat-form-field class="example-full-width">
+                    <input
+                        type="number"
+                        required
+                        matInput
+                        name="sortOrder"
+                        [min]="1"
+                        placeholder="Sort order"
+                        [(ngModel)]="category.sortOrder">
+                </mat-form-field>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+<div mat-dialog-actions class="justify-content-end">
+    <button mat-button [mat-dialog-close]="null" cdkFocusInitial>No, thanks</button>
+
+    <button
+        mat-raised-button
+        color="primary"
+        [disabled]="(loading$ | async) || !canSubmit()"
+        (click)="isNew ? createGameCategory() : updateGameCategory()"
+        [ngSwitch]="isNew"
+    >
+        <span *ngSwitchCase="true">Create</span>
+        <span *ngSwitchCase="false">Update</span>
+    </button>
+</div>

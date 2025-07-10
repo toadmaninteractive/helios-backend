@@ -1,0 +1,8 @@
+*.beam
+*.app
+.rebar
+.idea
+builds
+build
+deps
+erl_crash.dump

@@ -1,0 +1,49 @@
+<h1 mat-dialog-title>Adding draft build for {{ gameTitle }}</h1>
+
+<div mat-dialog-content>
+    <form class="m-form m-form--fit" [ngClass]="{ dimmed: loading$ | async }">
+        <fieldset [disabled]="loading$ | async">
+            <m-alert [(message)]="errorMessage" kind="danger"></m-alert>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-1">
+                <mat-form-field class="example-full-width">
+                    <input
+                        type="text"
+                        required
+                        matInput
+                        name="buildRevision"
+                        placeholder="Build revision"
+                        [(ngModel)]="buildRev">
+
+                    <mat-hint align="start" class="f-s-12 pt-1">
+                        Unique build revision title to identify this build. Cannot be changed later<br>
+                        Should contain latin letters, digits, - and _ symbols
+                    </mat-hint>
+                </mat-form-field>
+            </div>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-4">
+                <mat-form-field class="example-full-width">
+                    <mat-select name="buildPlatform" placeholder="Build platform" [(ngModel)]="platform">
+                        <mat-option *ngFor="let opt of platforms" [value]="opt.value">
+                            <strong>{{ opt.label }}</strong>
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+<div mat-dialog-actions class="justify-content-end">
+    <button mat-button [mat-dialog-close]="null" cdkFocusInitial>No, thanks</button>
+
+    <button
+        mat-raised-button
+        color="primary"
+        [disabled]="(loading$ | async) || !buildValid()"
+        (click)="onDraftBuildCreate()">
+        Create draft build
+    </button>
+</div>
+

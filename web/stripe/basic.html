@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Basic payment form</title>
+    <style>
+        body { text-align: center; }
+        .form-control { background-color: white !important; }
+        div { margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <form action="/stripe/charge?guid={guid}&username={username}" method="POST" id="payment-form">
+        <script
+            src="https://checkout.stripe.com/checkout.js"
+            class="stripe-button"
+            data-key="{publishable_key}"
+            data-amount="{amount_cents}"
+            data-currency="{currency_lower}"
+            data-name="Toadman Interactive"
+            data-description="Purchase {game_title}"
+            data-locale="auto"
+            data-email="false"
+            data-zip-code="false">
+        </script>
+    </form>
+</body>
+</html>

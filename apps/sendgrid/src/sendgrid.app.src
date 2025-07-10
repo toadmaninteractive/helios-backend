@@ -1,0 +1,8 @@
+{application, sendgrid, [
+    {description, "Sendgrid Integration Service"},
+    {vsn, "1.0.0"},
+    {modules, []},
+    {registered, []},
+    {applications, [kernel, stdlib, sasl, ibrowse]},
+    {mod, {sendgrid_app, []}}
+]}.

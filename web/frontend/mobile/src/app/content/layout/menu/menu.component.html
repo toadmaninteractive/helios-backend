@@ -1,0 +1,33 @@
+<nav class="navbar">
+    <div class="container">
+        <div class="navbar-brand">
+            <a class="navbar-item" routerLink="/dashboard">
+                <img src="./assets/app/media/img/logos/aside.png">
+            </a>
+
+            <div class="navbar-item username">
+                @{{ accountService.username$ | async }}
+            </div>
+
+            <div class="navbar-burger burger animate" [mBurger]="navMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div #navMenu class="navbar-menu">
+            <div class="navbar-start">
+                <a class="navbar-item" routerLink="/games">
+                    Games
+                </a>
+
+                <hr class="m-y-05">
+
+                <a class="navbar-item" href="javascript:void(null)" (click)="signOut()">
+                    Sign out
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

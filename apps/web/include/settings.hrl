@@ -1,0 +1,9 @@
+-define(web_app, web).
+-define(web_acceptors, 5).
+-define(web_ip, {0, 0, 0, 0}).
+-define(web_port, 7770).
+-define(web_max_upload_size, 268435456).
+-define(web_root_id, 0).
+-define(web_root_name, <<"Root">>).
+-define(web_realm_admin, <<"/admin">>).
+-define(web_realm_site, <<"/">>).

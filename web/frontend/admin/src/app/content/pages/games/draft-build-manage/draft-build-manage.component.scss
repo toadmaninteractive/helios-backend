@@ -1,0 +1,18 @@
+::ng-deep .ngx-file-drop__drop-zone {
+    height: auto !important;
+    border: none !important;
+    border-radius: 0 !important;
+
+    .ngx-file-drop__content {
+        height: auto !important;
+    }
+}
+
+.progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(34, 139, 34, .15);
+}

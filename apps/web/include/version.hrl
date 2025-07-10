@@ -1,0 +1,2 @@
+-define(version_backend, <<"1.0.0">>).
+-define(version_frontend_admin, <<"1.0.0">>).

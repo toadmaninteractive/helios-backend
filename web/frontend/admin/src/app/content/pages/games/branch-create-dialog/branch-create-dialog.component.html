@@ -1,0 +1,85 @@
+<h1 mat-dialog-title>Add new branch to {{ data.gameTitle }}</h1>
+
+<div mat-dialog-content>
+    <form class="m-form m-form--fit" [ngClass]="{ dimmed: loading$ | async }" *ngIf="newBranch">
+        <fieldset [disabled]="loading$ | async">
+            <m-alert [(message)]="errorMessage" kind="danger"></m-alert>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-1">
+                <mat-form-field class="example-full-width">
+                    <input
+                        type="text"
+                        required
+                        matInput
+                        name="newBranchTitle"
+                        placeholder="Game branch title"
+                        [(ngModel)]="newBranch.title">
+
+                    <mat-hint align="start" class="f-s-12 pt-1">
+                        Unique title to identify this game branch
+                    </mat-hint>
+                </mat-form-field>
+            </div>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-2">
+                <mat-form-field class="example-full-width">
+                    <input
+                        type="text"
+                        matInput
+                        name="newBranchDescription"
+                        placeholder="Game branch description"
+                        [(ngModel)]="newBranch.description">
+
+                    <mat-hint align="start" class="f-s-12 pt-1">
+                        This field is optional
+                    </mat-hint>
+                </mat-form-field>
+            </div>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-4">
+                <mat-form-field class="example-full-width">
+                    <input
+                        type="text"
+                        matInput
+                        name="newBranchPassword"
+                        placeholder="Game branch unlock password"
+                        [(ngModel)]="newBranch.password">
+
+                    <mat-hint align="start" class="f-s-12 pt-1">
+                        Used to unlock non-public branch at Toadman Launcher
+                    </mat-hint>
+                </mat-form-field>
+            </div>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-4">
+                <mat-form-field class="example-full-width">
+                    <mat-select name="gameEngine" placeholder="Game engine" [(ngModel)]="newBranch.gameEngine">
+                        <mat-option *ngFor="let engine of gameEngines" [value]="engine.value">
+                            <strong>{{ engine.label }}</strong>
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-4">
+                <mat-form-field class="example-full-width">
+                    <mat-select name="platform" placeholder="Platform" [(ngModel)]="newBranch.platform">
+                        <mat-option *ngFor="let platform of platforms" [value]="platform.value">
+                            <strong>{{ platform.label }}</strong>
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+<div mat-dialog-actions class="justify-content-end">
+    <button mat-button [mat-dialog-close]="null" cdkFocusInitial>No, thanks</button>
+
+    <button
+        mat-raised-button
+        color="primary"
+        [disabled]="(loading$ | async) || !isGameBranchValid()"
+        (click)="createGameBranch()">Add game branch</button>
+</div>

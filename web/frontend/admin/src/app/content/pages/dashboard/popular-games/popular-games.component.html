@@ -1,0 +1,42 @@
+<m-portlet>
+    <!-- use ng-container[mPortletHeadTitle] for the title -->
+    <ng-container mPortletHeadTitle>
+        <div class="m-portlet__head-title">
+            <h3 class="m-portlet__head-text">
+                Most popular games
+            </h3>
+        </div>
+    </ng-container>
+
+    <!-- use ng-container[mPortletHeadTools] for the top right toolbar content -->
+    <ng-container mPortletHeadTools>
+        <ul class="m-portlet__nav">
+            <li class="m-portlet__nav-item">
+                <a
+                    href="javascript:void(null);"
+                    class="m-portlet__nav-link m-portlet__nav-link--icon"
+                    title="Refresh"
+                    matTooltip="Click to refresh"
+                    matTooltipPosition="above"
+                    (click)="getPopularGames()">
+                    <i class="la la-refresh"></i>
+                </a>
+            </li>
+        </ul>
+    </ng-container>
+
+    <!-- use ng-container[mPortletBody] for the body content -->
+    <ng-container mPortletBody>
+        <perfect-scrollbar class="m-scrollable m-scroller" style="height: 40vh;">
+            <div [ngClass]="{ dimmed: loading$ | async }">
+                <canvas baseChart
+                    [datasets]="barChartData"
+                    [labels]="barChartLabels"
+                    [options]="barChartOptions"
+                    [chartType]="barChartType"
+                    [colors]="barChartColors"
+                    *ngIf="barChartData.length > 0"></canvas>
+            </div>
+        </perfect-scrollbar>
+    </ng-container>
+</m-portlet>

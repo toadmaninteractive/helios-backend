@@ -1,0 +1,54 @@
+<m-portlet>
+    <!-- use ng-container[mPortletHeadTitle] for the title -->
+    <ng-container mPortletHeadTitle>
+        <div class="m-portlet__head-title">
+            <h3 class="m-portlet__head-text">
+                My favourite games
+            </h3>
+        </div>
+    </ng-container>
+
+    <!-- use ng-container[mPortletHeadTools] for the top right toolbar content -->
+    <ng-container mPortletHeadTools>
+        <ul class="m-portlet__nav">
+            <li class="m-portlet__nav-item">
+                <a
+                    href="javascript:void(null);"
+                    class="m-portlet__nav-link m-portlet__nav-link--icon"
+                    title="Refresh"
+                    matTooltip="Click to refresh"
+                    matTooltipPosition="above"
+                    (click)="getFavouriteGames()">
+                    <i class="la la-refresh"></i>
+                </a>
+            </li>
+        </ul>
+    </ng-container>
+
+    <!-- use ng-container[mPortletBody] for the body content -->
+    <ng-container mPortletBody>
+        <perfect-scrollbar class="m-scrollable m-scroller" style="height: 40vh;">
+            <div [ngClass]="{ dimmed: loading$ | async }">
+                <div class="m--padding-top-5 m--padding-bottom-10" *ngFor="let game of games$ | async">
+                    <div class="block">
+                        <a
+                            routerLink="/games/{{ game.id }}/manage"
+                            class="f-s-16 f-w-500"
+                            matTooltip="Click to manage"
+                            matTooltipPosition="right">
+                            {{ game.title }}
+                        </a>
+                    </div>
+
+                    <ng-container [ngSwitch]="!!game.description">
+                        <pre class="game-desc" *ngSwitchCase="true">{{ game.description }}</pre>
+
+                        <span class="font-italic f-w-400 dimmed less" *ngSwitchDefault>
+                            No description specified. Perhaps, you can add it?
+                        </span>
+                    </ng-container>
+                </div>
+            </div>
+        </perfect-scrollbar>
+    </ng-container>
+</m-portlet>

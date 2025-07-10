@@ -1,0 +1,5 @@
+Helios DB Setup AS superuser
+============================
+
+CREATE ROLE helios LOGIN password 'helios_pwd';
+CREATE DATABASE helios ENCODING 'UTF8' OWNER helios;

@@ -1,0 +1,118 @@
+[* json.enabled]
+module StripeProtocol
+{
+    enum ErrorType
+    {
+        api_connection_error;
+        api_error;
+        authentication_error;
+        card_error;
+        idempotency_error;
+        invalid_request_error;
+        rate_limit_error;
+    }
+
+    enum ChargeStatus
+    {
+        succeeded;
+        pending;
+        failed;
+    }
+
+    record StripeList<T>
+    {
+        string object = "list";
+        ?string url;
+        bool has_more;
+        list<T> data;
+    }
+
+    record Funds {
+        string currency;
+        int amount;
+        dict<string, int> source_types;
+    }
+
+    record Balance
+    {
+        string object = "balance";
+        list<Funds> available;
+        ?list<Funds> connect_reserved;
+        bool livemode;
+        list<Funds> pending;
+    }
+
+    record Customer
+    {
+        // TODO: fill later
+        string id;
+        string object = "customer";
+    }
+
+    record Charge
+    {
+        string id;
+        string object = "charge";
+        uint amount;
+        uint amount_refunded;
+        ?string application;
+        ?string application_fee;
+        ?string balance_transaction;
+        bool captured;
+        uint created;
+        ?string currency;
+        ?string customer;
+        ?string description;
+        ?string destination;
+        ?string dispute;
+        ?string failure_code;
+        ?string failure_message;
+        // ?dict<string, string> fraud_details;
+        ?string invoice;
+        bool livemode;
+        // ?dict<string, string> metadata;
+        ?string on_behalf_of;
+        ?string order;
+        //?dict<string, string> outcome;
+        bool paid;
+        ?string receipt_email;
+        ?string receipt_number;
+        bool refunded;
+        // custom refunds
+        ?string review;
+        // custom shipping
+        // custom source
+        ?string source_transfer;
+        ?string statement_descriptor;
+        ChargeStatus status;
+        ?string transfer;
+        ?string transfer_group;
+    }
+
+    [* http.form.enabled]
+    record CreateCustomerRequest
+    {
+        string email;
+        string source;
+        string description;
+    }
+
+    [* http.form.enabled]
+    record CreateChargeRequest
+    {
+        int amount;
+        string currency;
+        string description;
+        ?string source;
+        ?string customer;
+    }
+
+    [erlang http.client http.base_url="\"https://api.stripe.com/v1\"" http.default_client_headers="stripe:default_headers()"]
+    webservice StripeApi
+    {
+        GetBalance => GET /balance -> Balance;
+        CreateCustomer => POST /customers CreateCustomerRequest as form -> Customer;
+        GetCharges => GET /charges -> StripeList<Charge>;
+        CreateCharge => POST /charges CreateChargeRequest as form -> Charge;
+    }
+}

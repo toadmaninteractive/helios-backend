@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Toadman Interactive validation</title>
+    <style>
+        body { text-align: center; background-color: transparent; }
+        div { margin: 0 auto; }
+    </style>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <script type="text/javascript">
+        window._recaptchaResponse = null;
+    
+        function successCallback(response) {
+            window._recaptchaResponse = response || null;
+        }
+
+        function expiredCallback() {
+            console.log('expiredCallback');
+            window._recaptchaResponse = null;
+            window.location.reload(true);
+        }
+        
+        function errorCallback(response) {
+            console.log('errorCallback', response);
+            window._recaptchaResponse = null;
+        }
+    </script>
+</head>
+<body>
+    <div
+        class="g-recaptcha"
+        data-sitekey="{site_key}"
+        data-callback="successCallback"
+        data-expired-callback="expiredCallback"
+        data-error-callback="errorCallback">
+    </div>
+</body>
+</html>

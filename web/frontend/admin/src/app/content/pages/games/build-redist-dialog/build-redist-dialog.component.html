@@ -1,0 +1,75 @@
+<ng-container *ngIf="{ loading: loading$.asObservable() | async } as x">
+    <h1 mat-dialog-title>
+        Edit redistributables for build #{{ data.build.buildRev }}
+    </h1>
+
+    <div mat-dialog-content>
+        <form class="m-form m-form--fit" style="height: 235px" [class.dimmed]="x.loading" *ngIf="entries?.length >= 0">
+            <fieldset [disabled]="x.loading">
+                <m-alert [(message)]="errorMessage" kind="danger"></m-alert>
+
+                <div class="mb-3 f-w-400 f-s-14" *ngIf="entries.length === 0">
+                    No redistributables defined
+                </div>
+
+                <ng-container *ngFor="let entry of entries; let index = index">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group m-form__group pl-0 pr-0 mb-1">
+                                <mat-form-field class="example-full-width pb-05">
+                                    <input
+                                        type="text"
+                                        required
+                                        matInput
+                                        placeholder="Name"
+                                        [(ngModel)]="entry.name"
+                                        [ngModelOptions]="{ standalone: true }">
+                                </mat-form-field>
+                            </div>
+                        </div>
+
+                        <div class="col-md-7">
+                            <div class="form-group m-form__group pl-0 pr-0 mb-1">
+                                <mat-form-field class="example-full-width pb-05">
+                                    <input
+                                        type="text"
+                                        matInput
+                                        placeholder="URL"
+                                        [(ngModel)]="entry.url"
+                                        [ngModelOptions]="{ standalone: true }">
+                                </mat-form-field>
+                            </div>
+                        </div>
+
+                        <div class="col-md-1">
+                            <mat-icon
+                                class="red f-s-24 clickable bold mt-3"
+                                matTooltip="Click to delete entry"
+                                matTooltipPosition="above"
+                                (click)="entries.splice(index, 1)">
+                                close
+                            </mat-icon>
+                        </div>
+                    </div>
+                </ng-container>
+
+                <a href="javascript:null" (click)="addEntry()">
+                    <mat-icon [inline]="true">add</mat-icon>
+                    <span class="v-a-super f-w-500 ml-05">Add entry</span>
+                </a>
+            </fieldset>
+        </form>
+    </div>
+
+    <div mat-dialog-actions class="justify-content-end">
+        <button mat-button [mat-dialog-close]="null" cdkFocusInitial>No, thanks</button>
+
+        <button
+            mat-raised-button
+            color="primary"
+            [disabled]="x.loading || !entriesInitialized() || !entriesValid() || !entriesChanged()"
+            (click)="updateBuild()">
+            Update game build
+        </button>
+    </div>
+</ng-container>

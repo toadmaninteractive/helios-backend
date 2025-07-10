@@ -1,0 +1,81 @@
+<m-portlet>
+    <!-- use ng-container[mPortletHeadTitle] for the title -->
+    <ng-container mPortletHeadTitle>
+        <div class="m-portlet__head-title">
+            <h3 class="m-portlet__head-text">
+                Recent game builds
+            </h3>
+        </div>
+    </ng-container>
+
+    <!-- use ng-container[mPortletHeadTools] for the top right toolbar content -->
+    <ng-container mPortletHeadTools>
+        <ul class="m-portlet__nav">
+            <li class="m-portlet__nav-item">
+                <a
+                    href="javascript:void(null);"
+                    class="m-portlet__nav-link m-portlet__nav-link--icon"
+                    title="Refresh"
+                    matTooltip="Click to refresh"
+                    matTooltipPosition="above"
+                    (click)="getRecentBuilds()">
+                    <i class="la la-refresh"></i>
+                </a>
+            </li>
+        </ul>
+    </ng-container>
+
+    <!-- use ng-container[mPortletBody] for the body content -->
+    <ng-container mPortletBody>
+        <perfect-scrollbar class="m-scrollable m-scroller" style="height: 40vh;">
+            <div class="m-timeline-2" [ngClass]="{ dimmed: loading$ | async }">
+                <div class="m-timeline-2__items m--padding-top-5 m--padding-bottom-10" *ngFor="let build of builds$ | async">
+                    <div class="m-timeline-2__item">
+                        <span class="m-timeline-2__item-time f-s-11 f-w-400 mt-05">
+                            {{ build.createdAt | mTimeElapsed }}
+                        </span>
+
+                        <div class="m-timeline-2__item-cricle">
+                            <i class="la la-genderless m--font-brand"></i>
+                        </div>
+
+                        <div class="m-timeline-2__item-text m--padding-top-5">
+                            <ng-container>
+                                Revision <strong class="f-w-600">#{{ build.buildRev }}</strong> for
+                                <a
+                                    routerLink="/games/{{ build.gameId }}/manage"
+                                    class="f-w-600"
+                                    matTooltip="Click to manage"
+                                    matTooltipPosition="above">
+                                    {{ build.gameTitle }}
+                                </a>
+                                <span class="m-badge x-tag compact poppins f-w-400 ml-1" *ngFor="let branchTag, let index = index of build.branchTags" [ngClass]="tagBadgeClass(index)">
+                                    {{ branchTag }}
+                                </span>
+                                <br>
+                            </ng-container>
+
+                            <ng-container>
+                                <mat-icon [inline]="true" class="mr-05 v-a-middle metal">get_app</mat-icon>
+                                <strong class="f-w-600">{{ build.compressedSize | mPrettySize }}</strong> to download,
+                                <strong class="f-w-600">{{ build.totalSize | mPrettySize }}</strong> to install<br>
+                            </ng-container>
+
+                            <ng-container *ngIf="build.commentary">
+                                <mat-icon [inline]="true" class="mr-05 v-a-middle metal">comment</mat-icon>
+                                <small class="f-s-12">{{ build.commentary }}</small><br>
+                            </ng-container>
+
+                            <small class="f-s-12">
+                                Built on {{ build.updatedAt | date: 'yyyy-MM-dd HH:mm' }} for
+                                <span class="m-badge m-badge--metal x-tag compact poppins f-w-400">
+                                    {{ platform(build.platform) }}
+                                </span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </perfect-scrollbar>
+    </ng-container>
+</m-portlet>

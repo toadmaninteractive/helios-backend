@@ -1,0 +1,8 @@
+{application, web, [
+    {description, "Web service"},
+    {vsn, "1.0.0"},
+    {modules, []},
+    {registered, []},
+    {applications, [kernel, stdlib, sasl, ssl, cowboy, gproc, db, access, sendgrid, stripe, captcha]},
+    {mod, {web_app, []}}
+]}.

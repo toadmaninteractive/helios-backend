@@ -1,0 +1,82 @@
+<h1 class="title">Game builds</h1>
+
+<ng-container *ngIf="isSupportedPlatform(mobilePlatform$ | async); else platformNotSupported">
+    <progress class="progress is-small is-primary" max="100" *ngIf="loading$ | async">15%</progress>
+
+    <ng-container *ngIf="!(loading$ | async)">
+        <article class="message is-danger" *ngIf="error$ | async">
+            <div class="message-body">
+                {{ error$ | async }}
+            </div>
+        </article>
+
+        <article class="message is-info" *ngIf="(builds$ | async)?.length === 0">
+            <div class="message-body">
+                No game builds are available for your platform
+                (<strong>{{ platformName(mobilePlatform$ | async) }}</strong>)
+            </div>
+        </article>
+
+        <div class="card events-card" *ngIf="(builds$ | async)?.length > 0">
+            <header class="card-header">
+                <p class="card-header-title">
+                    Available for {{ platformName(mobilePlatform$ | async) }}
+                </p>
+
+                <a href="javascript:void(null)" class="card-header-icon" (click)="getMobileBuilds()">
+                    <span class="icon">
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </span>
+                </a>
+            </header>
+
+            <div class="card-table">
+                <div class="content">
+                    <table class="table is-fullwidth is-striped">
+                        <tbody>
+                        <tr *ngFor="let build of builds$ | async">
+                            <td>
+                                <span class="is-normal">Rev. #{{ build.buildRev }}</span>
+
+                                <span class="tag is-light is-small m-l-05">
+                                    built {{ build.createdAt.toDateString() | mTimeElapsed:'ago' }}
+                                </span>
+
+                                <br>
+
+                                <span class="tag is-light is-small">
+                                    Size: {{ build.totalSize | mPrettySize }}
+                                </span>
+
+                                <span class="m-l-05 tag is-success is-light" *ngFor="let branchTag of build.branchTags">
+                                    {{ branchTag }}
+                                </span>
+                            </td>
+
+                            <td class="level-right t-a-right">
+                                <a class="button is-small is-info" href="{{ build.cdnRootUrl.replace('http://', 'https://') }}{{ build.cdnRootUrl.endsWith('/') ? '' : '/' }}{{ build.exePath }}">
+                                    Download
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <footer class="card-footer">
+                <a routerLink="/games" class="card-footer-item">Back to Games</a>
+            </footer>
+        </div>
+    </ng-container>
+</ng-container>
+
+<ng-template #platformNotSupported>
+    <article class="message is-warning">
+        <div class="message-body">
+            Sorry, your platform <strong>{{ platformName(mobilePlatform$ | async) }}</strong> is not supported
+            <br><br>
+            Supported platforms: <strong>Android</strong> and <strong>iOS</strong>
+        </div>
+    </article>
+</ng-template>

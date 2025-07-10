@@ -1,0 +1,245 @@
+<div class="row">
+    <div class="col-lg-12">
+        <div class="m-portlet">
+            <div class="m-portlet__head">
+                <div class="m-portlet__head-caption">
+                    <div class="m-portlet__head-title">
+                        <span class="m-portlet__head-icon">
+                            <i class="la la-gear"></i>
+                        </span>
+
+                        <h3 class="m-portlet__head-text">
+                            Manage system settings
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="m-portlet__head-tools">
+                    <ul class="m-portlet__nav">
+                        <li class="m-portlet__nav-item">
+                            <a
+                                href="javascript:void(null);"
+                                class="m-portlet__nav-link m-portlet__nav-link--icon"
+                                title="Refresh"
+                                matTooltip="Click to refresh"
+                                matTooltipPosition="above"
+                                (click)="getSettings()">
+                                <i class="la la-refresh"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <form class="m-form m-form--fit" [ngClass]="{ dimmed: loading$ | async }" *ngIf="isInitialized()">
+                <fieldset [disabled]="loading$ | async">
+                    <div class="m-portlet__body">
+                        <div class="row">
+                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                <div class="m-form__heading">
+                                    <h3 class="m-form__heading-title">Sessions</h3>
+                                </div>
+
+                                <div class="form-group m-form__group">
+                                    <mat-form-field class="example-full-width">
+                                        <input
+                                            type="number"
+                                            required
+                                            matInput
+                                            name="clientSessionDuration"
+                                            [min]="0"
+                                            placeholder="Client session duration"
+                                            [(ngModel)]="settings.clientSessionDuration">
+
+                                        <mat-hint align="start" class="f-s-12 pt-1">
+                                            Which is
+                                            <strong>{{ settings.clientSessionDuration | mPrettyDuration }}</strong>
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="form-group m-form__group">
+                                    <mat-form-field class="example-full-width">
+                                        <input
+                                            type="number"
+                                            required
+                                            matInput
+                                            name="personnelSessionDuration"
+                                            [min]="0"
+                                            placeholder="Personnel session duration"
+                                            [(ngModel)]="settings.personnelSessionDuration">
+
+                                        <mat-hint align="start" class="f-s-12 pt-1">
+                                            Which is
+                                            <strong>{{ settings.personnelSessionDuration | mPrettyDuration }}</strong>
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                <div class="m-form__heading">
+                                    <h3 class="m-form__heading-title">Authentication requests</h3>
+                                </div>
+
+                                <div class="form-group m-form__group">
+                                    <mat-form-field class="example-full-width">
+                                        <input
+                                            type="number"
+                                            required
+                                            matInput
+                                            name="registerConfirmCodeLifetime"
+                                            [min]="0"
+                                            placeholder="Client register confirmation code lifetime"
+                                            [(ngModel)]="settings.registerConfirmCodeLifetime">
+
+                                        <mat-hint align="start" class="f-s-12 pt-1">
+                                            Which is
+                                            <strong>{{ settings.registerConfirmCodeLifetime | mPrettyDuration }}</strong>
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="form-group m-form__group">
+                                    <mat-form-field class="example-full-width">
+                                        <input
+                                            type="number"
+                                            required
+                                            matInput
+                                            name="phoneConfirmCodeLifetime"
+                                            [min]="0"
+                                            placeholder="Client phone confirmation code lifetime"
+                                            [(ngModel)]="settings.phoneConfirmCodeLifetime">
+
+                                        <mat-hint align="start" class="f-s-12 pt-1">
+                                            Which is
+                                            <strong>{{ settings.phoneConfirmCodeLifetime | mPrettyDuration }}</strong>
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="form-group m-form__group">
+                                    <mat-form-field class="example-full-width">
+                                        <input
+                                            type="number"
+                                            required
+                                            matInput
+                                            name="passwordResetConfirmCodeLifetime"
+                                            [min]="0"
+                                            placeholder="Client password reset confirmation code lifetime"
+                                            [(ngModel)]="settings.passwordResetConfirmCodeLifetime">
+
+                                        <mat-hint align="start" class="f-s-12 pt-1">
+                                            Which is
+                                            <strong>{{ settings.passwordResetConfirmCodeLifetime | mPrettyDuration }}</strong>
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!--
+                        <div class="m-form__seperator m-form__seperator--dashed"></div>
+                        <div class="m-form__section m-form__section--last">...</div>
+                        -->
+                    </div>
+
+                    <div class="m-portlet__foot m-portlet__no-border m-portlet__foot--fit m--align-right">
+                        <div class="m-form__actions m-form__actions--solid">
+                            <button
+                                mat-raised-button
+                                color="primary"
+                                [disabled]="(loading$ | async) || !settingsChanged() || !settingsValid()"
+                                (click)="updateSettings()">
+                                Update settings
+                            </button>&nbsp;
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="m-portlet">
+            <div class="m-portlet__head">
+                <div class="m-portlet__head-caption">
+                    <div class="m-portlet__head-title">
+                        <span class="m-portlet__head-icon">
+                            <i class="la la-android"></i>
+                        </span>
+
+                        <h3 class="m-portlet__head-text">
+                            Continuous integration
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="m-portlet__head-tools">
+                    <ul class="m-portlet__nav">
+                        <li class="m-portlet__nav-item">
+                            <a
+                                href="javascript:void(null);"
+                                class="m-portlet__nav-link m-portlet__nav-link--icon"
+                                title="Refresh"
+                                matTooltip="Click to refresh"
+                                matTooltipPosition="above"
+                                (click)="getSettings()">
+                                <i class="la la-refresh"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <form class="m-form m-form--fit" [ngClass]="{ dimmed: loading$ | async }" *ngIf="isInitialized()">
+                <fieldset [disabled]="loading$ | async">
+                    <div class="m-portlet__body">
+                        <div class="row">
+                            <div class="col-md-12 col-sm-12 col-xs-12">
+                                <div class="m-form__heading">
+                                    <h3 class="m-form__heading-title">API access</h3>
+                                </div>
+
+                                <div class="form-group m-form__group">
+                                    <mat-form-field class="example-full-width">
+                                        <input
+                                            required
+                                            matInput
+                                            name="ciApiKey"
+                                            readonly
+                                            [disabled]="!settings.ciApiKey"
+                                            placeholder="CI API key"
+                                            [value]="settings.ciApiKey || 'None'">
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="m-portlet__foot m-portlet__no-border m-portlet__foot--fit m--align-right">
+                        <div class="m-form__actions m-form__actions--solid">
+                            <button
+                                mat-raised-button
+                                *ngIf="settings.ciApiKey"
+                                [disabled]="loading$ | async"
+                                (click)="onCiApiKeyCopy(settings?.ciApiKey)">
+                                Copy to clipboard
+                            </button>&nbsp;
+
+                            <button
+                                mat-raised-button
+                                color="primary"
+                                [disabled]="loading$ | async"
+                                (click)="regenerateCiApiKey()">
+                                {{ settings?.ciApiKey ? 'Regenerate' : 'Generate' }}
+                            </button>&nbsp;
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>

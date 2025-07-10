@@ -1,0 +1,26 @@
+<h1 mat-dialog-title>
+    Uploading files
+    ({{ (filePaths$ | async).length }} of {{ fileEntries.length }})
+</h1>
+
+<div mat-dialog-content>
+    <perfect-scrollbar style="height: 30vh;">
+        <ng-container *ngFor="let path of filePaths$ | async">
+            <div class="upload-item">
+                <div class="upload-item-fill" [style.width.%]="subjectMap.get(path) | async"></div>
+                {{ path }}
+            </div>
+        </ng-container>
+    </perfect-scrollbar>
+</div>
+
+<div mat-dialog-actions class="justify-content-end">
+    <button mat-button [mat-dialog-close]="null" *ngIf="loading$ | async">
+        Cancel
+    </button>
+
+    <button mat-button mat-raised-button color="primary" [mat-dialog-close]="true" *ngIf="!(loading$ | async)">
+        Done
+    </button>
+</div>
+

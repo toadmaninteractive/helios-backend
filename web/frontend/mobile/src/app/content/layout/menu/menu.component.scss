@@ -1,0 +1,27 @@
+nav.navbar {
+    border-top: 4px solid #00d1b2;
+    background-color: #282a3c;
+    margin-bottom: 1rem;
+
+    .navbar-burger {
+        color: #868aa8;
+    }
+
+    .navbar-menu {
+        background-color: #282a3c;
+
+        hr {
+            height: 1px;
+            background-color: rgba(134, 138, 168, .25)
+        }
+
+        .navbar-item, .navbar-link {
+            font-weight: 500;
+            color: #868aa8;
+        }
+    }
+}
+
+.username {
+    color: cornsilk;
+}

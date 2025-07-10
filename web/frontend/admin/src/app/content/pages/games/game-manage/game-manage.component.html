@@ -1,0 +1,1060 @@
+<div class="row mb-2" *ngIf="alerts.length > 0">
+    <div class="col-lg-12 mb-2 f-s-14" *ngFor="let index = index, let alert of alerts">
+        <m-alert
+            [message]="alert.message"
+            (messageChanged)="alerts.splice(index)"
+            [kind]="alert.kind"
+            [dismissible]="alert.dismissable">
+        </m-alert>
+    </div>
+</div>
+
+<div class="row" *ngIf="isAllowed(accessRole.Uploader)">
+    <div class="col-xl-7 col-lg-6 col-md-12 col-sm-12 col-xs-12">
+        <div class="m-portlet">
+            <div class="m-portlet__head">
+                <div class="m-portlet__head-caption">
+                    <div class="m-portlet__head-title">
+                        <span class="m-portlet__head-icon">
+                            <mat-icon [inline]="true" class="v-a-middle metal">vpn_key</mat-icon>
+                        </span>
+
+                        <h3 class="m-portlet__head-text" matTooltip="Unique game ID" matTooltipPosition="above">
+                            <span>{{ game?.id }}</span>
+                            <small class="metal mini ml-2">Rev. #{{ game?.rev }}</small>
+                        </h3>
+
+                        <span class="tools-available ml-3 pl-3" *ngIf="pristineGame && (canShowSeleneIcon(pristineGame) || canShowToadmanLauncherIcon(pristineGame))">
+                            <img
+                                src="./assets/app/media/img/logos/tools/selene.png"
+                                class="x-table-icon x-24 v-a-sub mr-1"
+                                matTooltip="Available in Selene"
+                                matTooltipPosition="above"
+                                alt="Selene"
+                                *ngIf="canShowSeleneIcon(pristineGame)">
+
+                            <img
+                                src="./assets/app/media/img/logos/tools/toadman_launcher.png"
+                                class="x-table-icon x-24 v-a-sub"
+                                matTooltip="Available in Toadman Launcher"
+                                matTooltipPosition="above"
+                                alt="Toadman Launcher"
+                                *ngIf="canShowToadmanLauncherIcon(pristineGame)">
+                        </span>
+
+                        <ng-container *ngIf="{ favourite: favourite$ | async } as x">
+                            <span class="tools-available ml-3 pl-3" *ngIf="pristineGame && x.favourite !== null">
+                                <img
+                                    src="./assets/app/media/img/misc/favourite.png"
+                                    class="x-table-icon x-24 v-a-sub mr-1 clickable grayscale"
+                                    [class.none]="!x.favourite"
+                                    matTooltip="{{ x.favourite ? 'Remove from' : 'Add to' }} favourites"
+                                    matTooltipPosition="above"
+                                    alt="{{ x.favourite ? 'Remove from' : 'Add to' }} favourites"
+                                    (click)="x.favourite ? unfavourGame(gameId) : favourGame(gameId)">
+                            </span>
+                        </ng-container>
+
+                        <ng-container *ngIf="categories && categoryAssignment">
+                            <a href="javascript:void(0)" class="tools-available ml-3 pl-3" [matMenuTriggerFor]="categoryMenu">
+                                <img
+                                    src="./assets/app/media/img/icons/categories.svg"
+                                    class="x-table-icon x-24 v-a-sub mr-1 clickable grayscale"
+                                    matTooltip="Manage categories"
+                                    matTooltipPosition="above"
+                                    alt="Manage categories"
+                                    (click)="null">
+                            </a>
+
+                            <mat-menu #categoryMenu="matMenu">
+                                <ng-container *ngIf="categories && categoryAssignment">
+                                    <button
+                                        mat-menu-item
+                                        *ngFor="let category of categories"
+                                        (click)="onCategoryToggle(gameId, category.id, $event)"
+                                    >
+                                        <mat-icon class="v-text-top mr-05 pt-05">
+                                            {{ !!categoryAssignment.get(category.id) ? 'check' : 'check_box_outline_blank' }}
+                                        </mat-icon>
+
+                                        <span>{{ category.name }}</span>
+                                    </button>
+                                </ng-container>
+                            </mat-menu>
+                        </ng-container>
+                    </div>
+                </div>
+
+                <div class="m-portlet__head-tools">
+                    <ul class="m-portlet__nav">
+                        <li class="m-portlet__nav-item">
+                            <a class="mr-2" routerLink="../acl/accounts" *ngIf="(accountService.profile$ | async).isSuperadmin">
+                                <button mat-raised-button color="primary">Manage Access</button>
+                            </a>
+
+                            <a
+                                href="javascript:null"
+                                class="m-portlet__nav-link m-portlet__nav-link--icon"
+                                title="Refresh"
+                                matTooltip="Click to refresh"
+                                matTooltipPosition="above"
+                                (click)="getGame(gameId)">
+                                <i class="la la-refresh"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <form class="m-form m-form--fit" *ngIf="isGameInitialized()">
+                <fieldset [disabled]="(loading$ | async) || !isAllowed(accessRole.Maintainer)" [ngClass]="{ dimmed: loading$ | async }">
+                    <div class="m-portlet__body">
+                        <div class="form-group m-form__group">
+                            <mat-form-field class="example-full-width">
+                                <input
+                                    type="text"
+                                    required
+                                    matInput
+                                    name="gameTitle"
+                                    placeholder="Game title"
+                                    [(ngModel)]="game.title">
+
+                                <mat-hint align="start" class="f-s-12 pt-1">
+                                    Unique game title to identify this game
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-group m-form__group">
+                            <mat-form-field class="example-full-width">
+                                <textarea
+                                    matInput
+                                    matTextareaAutosize
+                                    [matAutosizeMaxRows]="10"
+                                    name="gameDescription"
+                                    placeholder="Game description"
+                                    [(ngModel)]="game.description"
+                                    style="min-height: 20px"></textarea>
+
+                                <mat-hint align="start" class="f-s-12 pt-1">
+                                    This description appears at Toadman Launcher and other tools
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-group m-form__group mb-5">
+                            <mat-form-field class="example-full-width">
+                                <input
+                                    type="text"
+                                    matInput
+                                    name="gameJiraKey"
+                                    placeholder="JIRA project key"
+                                    [(ngModel)]="game.jiraKey">
+
+                                <mat-hint align="start" class="f-s-12 pt-1">
+                                    <div>
+                                        <mat-icon [inline]="true" class="f-s-21 metal mr-1">link</mat-icon>
+                                        <span class="v-a-super">Set valid project key to link this game to JIRA project board</span>
+                                    </div>
+
+                                    <div>
+                                        <mat-icon [inline]="true" class="f-s-21 metal mr-1">timelapse</mat-icon>
+                                        <span class="v-a-super">Can be used by Selene to report issues directly to JIRA</span>
+                                    </div>
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-group m-form__group mb-3">
+                            <mat-form-field class="example-full-width">
+                                <input
+                                    type="text"
+                                    matInput
+                                    name="gameSeleneKey"
+                                    placeholder="Selene migration key"
+                                    [(ngModel)]="game.seleneKey">
+
+                                <mat-hint align="start" class="f-s-12 pt-1">
+                                    <div>
+                                        <mat-icon [inline]="true" class="f-s-21 metal mr-1">timelapse</mat-icon>
+                                        <span class="v-a-super">Allows Selene to recognize old projects and migrate them to Helios</span>
+                                    </div>
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-group m-form__group mb-3">
+                            <mat-form-field class="example-full-width">
+                                <input
+                                    type="text"
+                                    matInput
+                                    name="gameCIUrl"
+                                    placeholder="CI Server URL"
+                                    [(ngModel)]="game.ciUrl">
+
+                                <mat-hint align="start" class="f-s-12 pt-1">
+                                    <div>
+                                        <mat-icon [inline]="true" class="f-s-21 metal mr-1">link</mat-icon>
+                                        <span class="v-a-super">Links game to a CI server project</span>
+                                    </div>
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-group m-form__group mb-3">
+                            <mat-form-field class="example-full-width">
+                                <input
+                                    type="text"
+                                    matInput
+                                    name="gameDiscordUrl"
+                                    placeholder="Discord URL"
+                                    [(ngModel)]="game.discordUrl">
+
+                                <mat-hint align="start" class="f-s-12 pt-1">
+                                    <div>
+                                        <mat-icon [inline]="true" class="f-s-21 metal mr-1">link</mat-icon>
+                                        <span class="v-a-super">Allows Toadman Launcher to show Discord link button</span>
+                                    </div>
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-group m-form__group">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <mat-form-field class="example-full-width">
+                                        <input
+                                            type="number"
+                                            required
+                                            matInput
+                                            name="gamePrice"
+                                            [min]="0"
+                                            placeholder="Game price"
+                                            [(ngModel)]="game.price">
+
+                                        <span matPrefix [ngSwitch]="game.currency">
+                                            <span *ngSwitchCase="'EUR'">€</span>
+                                            <span *ngSwitchCase="'USD'">$</span>
+                                            <span *ngSwitchCase="'RUB'">₽</span>
+                                            <span *ngSwitchDefault>{{ game.currency }}</span>
+                                            &nbsp;
+                                        </span>
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="example-full-width mat-form-field mat-primary mat-form-field-type-mat-input mat-form-field-appearance-legacy mat-form-field-can-float mat-form-field-should-float">
+                                        <div class="mat-form-field-infix">
+                                            <span class="mat-form-field-label-wrapper">
+                                                <label class="mat-form-field-label">
+                                                    Turn on to publish
+                                                </label>
+                                            </span>
+
+                                            <mat-checkbox
+                                                name="gameIsPublished"
+                                                color="accent"
+                                                [(ngModel)]="game.isPublished"
+                                                [disabled]="!isAllowed(accessRole.Admin)">
+                                                Published
+                                            </mat-checkbox>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="example-full-width mat-form-field mat-primary mat-form-field-type-mat-input mat-form-field-appearance-legacy mat-form-field-can-float mat-form-field-should-float">
+                                        <div class="mat-form-field-infix">
+                                            <span class="mat-form-field-label-wrapper">
+                                                <label class="mat-form-field-label">
+                                                    Turn on to disable
+                                                </label>
+                                            </span>
+
+                                            <mat-checkbox
+                                                name="gameIsDisabled"
+                                                color="primary"
+                                                [(ngModel)]="game.isDisabled"
+                                                [disabled]="!isAllowed(accessRole.Admin)">
+                                                Disabled
+                                            </mat-checkbox>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="example-full-width mat-form-field mat-primary mat-form-field-type-mat-input mat-form-field-appearance-legacy mat-form-field-can-float mat-form-field-should-float">
+                                        <div class="mat-form-field-infix">
+                                            <span class="mat-form-field-label-wrapper">
+                                                <label class="mat-form-field-label">
+                                                    Turn on to mark deleted
+                                                </label>
+                                            </span>
+
+                                            <mat-checkbox
+                                                name="gameIsDeleted"
+                                                color="warn"
+                                                [(ngModel)]="game.isDeleted"
+                                                [disabled]="!isAllowed(accessRole.Admin)">
+                                                Deleted
+                                            </mat-checkbox>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group m-form__group">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <mat-form-field class="example-full-width">
+                                        <input
+                                            type="number"
+                                            required
+                                            matInput
+                                            name="buildLifetime"
+                                            [min]="0"
+                                            placeholder="Build lifetime, days"
+                                            [(ngModel)]="game.buildLifetime">
+
+                                        <mat-hint align="start" class="f-s-12 pt-1">
+                                            <div>
+                                                <mat-icon [inline]="true" class="f-s-21 metal mr-1">delete_forever</mat-icon>
+                                                <span class="v-a-super">
+                                                    <b>0</b> &ndash; keep builds forever
+                                                </span>
+                                            </div>
+                                        </mat-hint>
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="example-full-width mat-form-field mat-primary mat-form-field-type-mat-input mat-form-field-appearance-legacy mat-form-field-can-float mat-form-field-should-float">
+                                        <div class="mat-form-field-infix">
+                                            <span class="mat-form-field-label-wrapper">
+                                                <label class="mat-form-field-label">
+                                                    Date added
+                                                </label>
+                                            </span>
+
+                                            {{ game.createdAt | date: 'yyyy-MM-dd HH:mm' }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="example-full-width mat-form-field mat-primary mat-form-field-type-mat-input mat-form-field-appearance-legacy mat-form-field-can-float mat-form-field-should-float">
+                                        <div class="mat-form-field-infix">
+                                            <span class="mat-form-field-label-wrapper">
+                                                <label class="mat-form-field-label">
+                                                    Date updated
+                                                </label>
+                                            </span>
+
+                                            {{ game.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="m-portlet__foot m-portlet__no-border m-portlet__foot--fit m--align-right">
+                    <div class="m-form__actions m-form__actions--solid">
+                        <!--
+                        <button mat-raised-button routerLink="/games" class="mr-2">
+                            Back to games
+                        </button>
+                        -->
+
+                        <button
+                            mat-raised-button
+                            color="primary"
+                            [disabled]="(loading$ | async) || !gameChanged() || !gameValid()"
+                            (click)="updateGame()">
+                            Update game details
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-xl-5 col-lg-6 col-md-12 col-sm-12 col-xs-12">
+        <div class="m-portlet v-fluid">
+            <div class="m-portlet__head">
+                <div class="m-portlet__head-caption">
+                    <div class="m-portlet__head-title">
+                        <span class="m-portlet__head-icon">
+                            <i class="la la-wrench"></i>
+                        </span>
+
+                        <h3 class="m-portlet__head-text">
+                            Game builds
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="m-portlet__head-tools">
+                    <ul class="m-portlet__nav">
+                        <li class="m-portlet__nav-item">
+                            <a
+                                href="javascript:void(null);"
+                                class="m-portlet__nav-link m-portlet__nav-link--icon"
+                                title="Refresh"
+                                matTooltip="Click to refresh"
+                                matTooltipPosition="above"
+                                (click)="getGameBuilds(gameId, 0, buildsSliceLength)">
+                                <i class="la la-refresh"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <form class="m-form m-form--fit v-fluid" *ngIf="builds?.length >= 0">
+                <fieldset class="v-fluid" [disabled]="loadingBuilds$ | async">
+                    <div class="m-portlet__body x-timeline">
+                        <div class="text-center dimmed" *ngIf="builds?.length === 0">
+                            No builds registered
+                        </div>
+
+                        <mat-menu #buildMenu="matMenu">
+                            <button mat-menu-item disabled>
+                                <span>Build revision #{{ activeBuild?.buildRev }}</span>
+                            </button>
+
+                            <mat-divider></mat-divider>
+
+                            <button mat-menu-item [matMenuTriggerFor]="branchMenu" *ngIf="!activeBuild?.isDraft">
+                                <span>Assign to branch</span>
+                            </button>
+
+                            <button
+                                mat-menu-item
+                                [swal]="{
+                                    title: 'Edit build comment',
+                                    text: 'Build revision #' + activeBuild?.buildRev,
+                                    input: 'textarea',
+                                    inputPlaceholder: 'Build comment',
+                                    inputValue: activeBuild?.commentary,
+                                    type: 'info',
+                                    confirmButtonText: 'Update',
+                                    showCancelButton: true
+                                }"
+                                (confirm)="onBuildCommentaryUpdate($event)">
+                                <span>Edit comment</span>
+                            </button>
+
+                            <button
+                                mat-menu-item
+                                [swal]="{
+                                    title: 'Edit change logs',
+                                    text: 'Build revision #' + activeBuild?.buildRev,
+                                    input: 'textarea',
+                                    inputPlaceholder: 'Build change logs',
+                                    inputValue: activeBuild?.changeList,
+                                    confirmButtonText: 'Update',
+                                    customClass: 'swal-lg',
+                                    showCancelButton: true
+                                }"
+                                (confirm)="onBuildChangeListUpdate($event)">
+                                <span>Edit change logs</span>
+                            </button>
+
+                            <button
+                                mat-menu-item
+                                *ngIf="!activeBuild?.isDraft"
+                                [swal]="{
+                                    title: 'Edit build config path',
+                                    text: 'Build revision #' + activeBuild?.buildRev,
+                                    input: 'text',
+                                    inputPlaceholder: 'Path to INI configuration file',
+                                    inputValue: activeBuild?.configPath,
+                                    type: 'info',
+                                    confirmButtonText: 'Update',
+                                    width: '700px',
+                                    showCancelButton: true
+                                }"
+                                (confirm)="onBuildConfigPathUpdate($event)">
+                                <span>Edit INI configuration path</span>
+                            </button>
+
+                            <button
+                                mat-menu-item
+                                [swal]="{
+                                    title: 'Edit optional file masks',
+                                    text: 'Build revision #' + activeBuild?.buildRev,
+                                    input: 'textarea',
+                                    inputPlaceholder: 'Optional file masks',
+                                    inputValue: (activeBuild?.optionalFileMasks || []).join('\r\n'),
+                                    confirmButtonText: 'Update',
+                                    customClass: 'swal-lg',
+                                    showCancelButton: true
+                                }"
+                                (confirm)="onBuildOptionalFileMasksUpdate($event)">
+                                <span>Edit optional file masks</span>
+                            </button>
+
+                            <button
+                                mat-menu-item
+                                [swal]="{
+                                    title: 'Edit preserved file masks',
+                                    text: 'Build revision #' + activeBuild?.buildRev,
+                                    input: 'textarea',
+                                    inputPlaceholder: 'Preserved file masks',
+                                    inputValue: (activeBuild?.preservedFileMasks || []).join('\r\n'),
+                                    confirmButtonText: 'Update',
+                                    customClass: 'swal-lg',
+                                    showCancelButton: true
+                                }"
+                                (confirm)="onBuildPreservedFileMasksUpdate($event)">
+                                <span>Edit preserved file masks</span>
+                            </button>
+
+                            <button
+                                mat-menu-item
+                                (click)="openBuildRedistDialog(activeBuild)">
+                                <span>Edit redistributables</span>
+                            </button>
+
+                            <button
+                                mat-menu-item
+                                (click)="onBuildTogglePermanent()"
+                                *ngIf="!activeBuild?.isDeleted">
+                                <span [ngSwitch]="activeBuild?.isPermanent">
+                                    <span *ngSwitchCase="false">Make build permanent</span>
+                                    <span *ngSwitchCase="true">Reset permanent status</span>
+                                </span>
+                            </button>
+
+                            <button
+                                mat-menu-item
+                                [swal]="{
+                                    title: 'Confirmation',
+                                    text: 'Delete build #' + activeBuild?.buildRev + ' and all its files permanently?',
+                                    type: 'error',
+                                    confirmButtonText: 'Delete',
+                                    customClass: { confirmButton: 'swal-danger' },
+                                    showCancelButton: true
+                                }"
+                                (confirm)="onBuildDelete()">
+                                <span>Delete build</span>
+                            </button>
+                        </mat-menu>
+
+                        <mat-menu #branchMenu="matMenu">
+                            <ng-container *ngIf="menuBranches?.length >= 0">
+                                <button
+                                    mat-menu-item
+                                    *ngFor="let branch of suitableBranches(menuBranches, activeBuild?.platform)" [disabled]="branch.buildId === activeBuild?.id"
+                                    [swal]="{
+                                        title: 'Confirmation',
+                                        html: 'Assign build revision <b>#' + activeBuild?.buildRev + '</b> to branch <b>' + branch.title + '</b>',
+                                        type: 'question',
+                                        confirmButtonText: 'Assign',
+                                        showCancelButton: true
+                                    }"
+                                    (confirm)="onBuildAssign(branch, activeBuild)">
+                                    <mat-icon class="align-text-top mr-05" [ngClass]="{ dimmed: branch.buildId === activeBuild?.id }">label</mat-icon>
+                                    <span>{{ branch.title }}</span>
+                                    <span class="ml-1" *ngIf="branch.buildId === activeBuild?.id">(assigned)</span>
+                                </button>
+                            </ng-container>
+                        </mat-menu>
+
+                        <perfect-scrollbar class="m-scrollable m-scroller" *ngIf="builds?.length > 0">
+                            <div class="m-timeline-2" [ngClass]="{ dimmed: loadingBuilds$ | async }">
+                                <div class="m-timeline-2__items m--padding-top-5 m--padding-bottom-10" *ngFor="let build of builds">
+                                    <div class="m-timeline-2__item">
+                                        <span class="m-timeline-2__item-time f-s-11 f-w-400 mt-05">
+                                            {{ build.createdAt | mTimeElapsed }}
+                                        </span>
+
+                                        <ng-container [ngSwitch]="build.isDeleted">
+                                            <div class="m-timeline-2__item-cricle clickable" (click)="activeBuild = build" [matMenuTriggerFor]="buildMenu" *ngSwitchCase="false">
+                                                <i
+                                                    class="la la-dot-circle-o m--font-brand animated"
+                                                    #indicator
+                                                    (mouseenter)="toggleBuildIndicator(indicator, true)"
+                                                    (mouseleave)="toggleBuildIndicator(indicator, false)"></i>
+                                            </div>
+
+                                            <div class="m-timeline-2__item-cricle" *ngSwitchCase="true">
+                                                <i class="la la-times-circle-o m--font-danger animated"></i>
+                                            </div>
+                                        </ng-container>
+
+                                        <div class="m-timeline-2__item-text m--padding-top-5">
+                                            <ng-container>
+                                                <mat-icon
+                                                    [inline]="true"
+                                                    class="mr-05 v-a-middle menu-icon clickable"
+                                                    (click)="activeBuild = build"
+                                                    [matMenuTriggerFor]="buildMenu"
+                                                    *ngIf="!build.isDeleted">settings</mat-icon>
+
+                                                Revision <strong class="f-w-600 mr-1">#{{ build.buildRev }}</strong>
+
+                                                <span class="m-badge x-tag compact poppins f-w-400 ml-1" *ngFor="let branchTag, let index = index of build.branchTags" [ngClass]="buildTagBadgeClass(index)">
+                                                    {{ branchTag }}
+                                                </span>
+
+                                                <label *ngIf="build.isDraft">
+                                                    <a routerLink="/games/{{ gameId }}/builds/{{ build.buildRev }}/draft" class="ml-1 bold blue">
+                                                        manage
+                                                    </a>
+
+                                                    <a href="javascript:void(null)" class="ml-1 bold green" (click)="onBuildPublish(build)">
+                                                        publish
+                                                    </a>
+                                                </label>
+
+                                                <br>
+                                            </ng-container>
+
+                                            <ng-container *ngIf="!build.isDeleted && !build.isDraft">
+                                                <mat-icon [inline]="true" class="mr-05 v-a-middle metal">get_app</mat-icon>
+                                                <strong class="f-w-600">{{ build.compressedSize | mPrettySize }}</strong> to download,
+                                                <strong class="f-w-600">{{ build.totalSize | mPrettySize }}</strong> to install
+
+                                                <ng-container *ngIf="!build.isDraft">
+                                                    <span class="ml-1 mr-1 metal f-w-100">⋮⋮</span>
+                                                    <a routerLink="/games/{{ gameId }}/builds/{{ build.buildRev }}" class="ml-1 metal f-w-500">view</a>
+                                                </ng-container>
+
+                                                <br>
+                                            </ng-container>
+
+                                            <ng-container *ngIf="!build.isDeleted">
+                                                <div class="permanent inline-block" matTooltip="This build will not be cleaned automatically" matTooltipPosition="above" *ngIf="build.isPermanent">
+                                                    <mat-icon [inline]="true" class="mr-05 v-a-middle">lock</mat-icon>
+                                                    <strong class="f-w-600">Permanent</strong>
+                                                </div>
+                                                <div class="draft inline-block" matTooltip="This build should be published" matTooltipPosition="above" *ngIf="build.isDraft">
+                                                    <mat-icon [inline]="true" class="mr-05 v-a-middle">create_new_folder</mat-icon>
+                                                    <strong class="f-w-600 v-a-middle">Draft</strong>
+                                                </div>
+                                                <br *ngIf="build.isPermanent || build.isDraft">
+                                            </ng-container>
+
+                                            <ng-container *ngIf="build.isDeleted">
+                                                <span class="f-w-400">Build is deleted<br></span>
+                                            </ng-container>
+
+                                            <ng-container *ngIf="build.commentary">
+                                                <mat-icon [inline]="true" class="mr-05 v-a-middle metal">comment</mat-icon>
+                                                <small class="f-s-12">{{ build.commentary }}</small><br>
+                                            </ng-container>
+
+                                            <ng-container *ngIf="build.changeList">
+                                                <div [swal]="{
+                                                    title: 'Edit change logs',
+                                                    text: 'Build revision #' + build.buildRev,
+                                                    input: 'textarea',
+                                                    inputPlaceholder: 'Build change logs',
+                                                    inputValue: build.changeList,
+                                                    confirmButtonText: 'Update',
+                                                    customClass: 'swal-lg',
+                                                    showCancelButton: true
+                                                }"
+                                                (confirm)="activeBuild = build; onBuildChangeListUpdate($event)">
+                                                    <mat-icon [inline]="true" class="mr-05 v-a-middle metal">change_history</mat-icon>
+                                                    <a href="javascript:void(null)" class="f-s-12">Has change logs</a><br>
+                                                </div>
+                                            </ng-container>
+
+                                            <small class="f-s-12">
+                                                {{ build.isDraft ? 'Created at' : 'Built on' }}
+                                                {{ build.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+                                                for
+                                                <span class="m-badge m-badge--metal x-tag compact poppins f-w-400">
+                                                    {{ platform(build.platform) }}
+                                                </span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </perfect-scrollbar>
+                    </div>
+                </fieldset>
+
+                <div class="m-portlet__foot m-portlet__no-border m-portlet__foot--fit m--align-right">
+                    <div class="m-form__actions m-form__actions--solid">
+                        <button
+                            mat-raised-button
+                            color="primary"
+                            (click)="openDraftBuildCreateDialog()"
+                            [disabled]="!isAllowed(accessRole.Uploader)">
+                            Add draft build
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row" *ngIf="isAllowed(accessRole.Uploader)">
+    <div class="col-xl-12">
+        <div class="m-portlet m-portlet--ngviewer">
+            <div class="m-portlet__head compact">
+                <div class="m-portlet__head-caption">
+                    <div class="m-portlet__head-title">
+                        <h3 class="m-portlet__head-text" *ngIf="isAllowed(accessRole.Maintainer)">
+                            <button mat-raised-button color="warn" (click)="openGameBranchCreateDialog()">
+                                Add new branch
+                            </button>
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="m-portlet__head-tools">
+                    <ul class="m-portlet__nav">
+                        <li class="m-portlet__nav-item">
+                            <a
+                                href="javascript:void(null);"
+                                class="m-portlet__nav-link m-portlet__nav-link--icon"
+                                title="Refresh"
+                                matTooltip="Click to refresh"
+                                matTooltipPosition="above"
+                                (click)="getAllGameBranches(gameId)">
+                                <i class="la la-refresh"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="m-portlet__body m-portlet__body--no-padding">
+                <div class="m-portlet__preview p-0">
+                    <table
+                        class="table-hover"
+                        mat-table
+                        [dataSource]="branches"
+                        matSort
+                        matSortDisableClear
+                        (matSortChange)="sortBranches($event)">
+                        <!-- ID column -->
+                        <ng-container matColumnDef="id">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                ID
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                {{ branch.id }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Title column -->
+                        <ng-container matColumnDef="title">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Title
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch" [ngSwitch]="isAllowed(accessRole.Maintainer)">
+                                <a
+                                    href="javascript:void(null)"
+                                    matTooltip="Click to manage"
+                                    matTooltipPosition="above"
+                                    (click)="openGameBranchEditCreateDialog(branch)"
+                                    *ngSwitchCase="true">
+                                    <strong>{{ branch.title }}</strong>
+                                </a>
+
+                                <strong *ngSwitchCase="false">
+                                    {{ branch.title }}
+                                </strong>
+                            </td>
+                        </ng-container>
+
+                        <!-- Status column -->
+                        <ng-container matColumnDef="status">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Status
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                <div class="m-timeline-3 x-table">
+                                    <div class="m-timeline-3__items">
+                                        <div class="m-timeline-3__item m-0" [ngClass]="branchBadgeClass(branch)">
+                                            <div class="m-timeline-3__item-desc pl-2">
+                                                <span class="m-timeline-3__item-text pl-1" style="line-height: 31px">
+                                                    <strong>{{ branchStatus(branch) | titlecase }}</strong>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </ng-container>
+
+                        <!-- Available In column -->
+                        <ng-container matColumnDef="available">
+                            <th mat-header-cell *matHeaderCellDef>
+                                Available In
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                <img
+                                    src="./assets/app/media/img/logos/tools/selene.png"
+                                    class="x-table-icon x-24 v-a-sub mr-1"
+                                    matTooltip="Available in Selene"
+                                    matTooltipPosition="above"
+                                    alt="Selene"
+                                    *ngIf="canShowSeleneIconForBranch(branch)">
+
+                                <img
+                                    src="./assets/app/media/img/logos/tools/toadman_launcher.png"
+                                    class="x-table-icon x-24 v-a-sub"
+                                    matTooltip="Available in Toadman Launcher"
+                                    matTooltipPosition="above"
+                                    alt="Toadman Launcher"
+                                    *ngIf="canShowToadmanLauncherIconForBranch(branch)">
+
+                                <span class="dimmed" *ngIf="!canShowSeleneIconForBranch(branch) && !canShowToadmanLauncherIconForBranch(branch)">
+                                    Hidden
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Game Engine column -->
+                        <ng-container matColumnDef="gameEngine">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Game Engine
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch" [ngSwitch]="!!branch.gameEngine">
+                                <span *ngSwitchCase="true">
+                                    {{ gameEngine(branch.gameEngine) }}
+                                </span>
+
+                                <span class="dimmed" *ngSwitchCase="false">
+                                    Not set
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Platform column -->
+                        <ng-container matColumnDef="platform">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Platform
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                {{ platform(branch.platform) }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Password column -->
+                        <ng-container matColumnDef="password">
+                            <th mat-header-cell *matHeaderCellDef>
+                                Password
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                <ng-container [ngSwitch]="!!branch.password">
+                                    <span class="dimmed" *ngSwitchCase="false">None</span>
+
+                                    <div (click)="onBranchPasswordCopy(branch.password)">
+                                        <i class="la la-copy metal align-text-bottom pr-1" *ngSwitchCase="true"></i>
+                                        <span class="clickable" *ngSwitchCase="true">Copy</span>
+                                    </div>
+                                </ng-container>
+                            </td>
+                        </ng-container>
+
+                        <!-- Build # column -->
+                        <ng-container matColumnDef="buildRev">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Build #
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                <ng-container [ngSwitch]="branch.buildRev">
+                                    <span class="dimmed" *ngSwitchCase="null">None</span>
+
+                                    <span [matTooltip]="branch.buildRev" matTooltipPosition="above" *ngSwitchDefault>
+                                        {{ fixBuildRev(branch.buildRev) }}
+                                    </span>
+                                </ng-container>
+                            </td>
+                        </ng-container>
+
+                        <!-- When column -->
+                        <ng-container matColumnDef="buildCreatedAt">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                When
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                <span [ngClass]="{ dimmed: !branch.buildCreatedAt }">
+                                    {{ branch.buildCreatedAt ? (branch.buildCreatedAt | mTimeElapsed:'ago') : 'None' }}
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Download column -->
+                        <ng-container matColumnDef="buildCompressedSize">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Download
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                <span [ngClass]="{ dimmed: !branch.buildCompressedSize }">
+                                    {{ branch.buildCompressedSize ? (branch.buildCompressedSize | mPrettySize) : 'None' }}
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Install column -->
+                        <ng-container matColumnDef="buildTotalSize">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Install
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                <span [ngClass]="{ dimmed: !branch.buildTotalSize }">
+                                    {{ branch.buildTotalSize ? (branch.buildTotalSize | mPrettySize) : 'None' }}
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- INI column -->
+                        <ng-container matColumnDef="iniConfig">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                INI
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                <mat-icon
+                                    class="clickable animated hoverable"
+                                    matTooltip="Click to edit INI configuration"
+                                    matTooltipPosition="above"
+                                    [class.blue]="branch.iniConfig.length > 0"
+                                    [class.metal]="branch.iniConfig.length === 0"
+                                    [inline]="true"
+                                    (click)="openIniConfigurationDialog(branch)">
+                                    settings
+                                </mat-icon>
+
+                                <span class="v-a-text-bottom" style="line-height: 24px" *ngIf="branch.iniConfig.length > 0">
+                                    {{ branch.iniConfig.length }}
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Registry column -->
+                        <ng-container matColumnDef="registryConfig">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Registry
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                <img
+                                    src="./assets/app/media/img/logos/tools/registry.png"
+                                    class="x-table-icon x-24 v-a-sub mr-1 clickable grayscale"
+                                    [class.none]="branch.registryConfig.length === 0"
+                                    matTooltip="Click to edit Registry configuration"
+                                    matTooltipPosition="above"
+                                    alt="Click to edit Registry configuration"
+                                    (click)="openRegistryConfigurationDialog(branch)">
+
+                                <span class="v-a-text-bottom" style="line-height: 25px" *ngIf="branch.registryConfig.length > 0">
+                                    {{ branch.registryConfig.length }}
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Report logs column -->
+                        <ng-container matColumnDef="isReportable">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Report Logs
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch" [ngSwitch]="isAllowed(accessRole.Maintainer)">
+                                <mat-checkbox
+                                    color="primary"
+                                    [checked]="branch.isReportable"
+                                    (change)="toggleGameBranchAsReportable(branch.id, branch.rev, $event.checked)"
+                                    *ngSwitchCase="true">
+                                    {{ branch.isReportable ? 'Yes' : 'No' }}
+                                </mat-checkbox>
+
+                                <span *ngSwitchCase="false">
+                                    {{ branch.isReportable ? 'Yes' : 'No' }}
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Default column -->
+                        <ng-container matColumnDef="isDefault">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Default
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch" [ngSwitch]="isAllowed(accessRole.Maintainer)">
+                                <mat-checkbox
+                                    [checked]="branch.isDefault"
+                                    [disabled]="branch.isDefault"
+                                    (change)="setGameBranchAsDefault(branch)"
+                                    *ngSwitchCase="true">
+                                    {{ branch.isDefault ? 'Yes' : 'No' }}
+                                </mat-checkbox>
+
+                                <span *ngSwitchCase="false">
+                                    {{ branch.isDefault ? 'Yes' : 'No' }}
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- Public column -->
+                        <ng-container matColumnDef="isPublic">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Public
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                {{ branch.isPublic ? 'Yes' : 'No' }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Deleted column -->
+                        <ng-container matColumnDef="isDeleted">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Deleted
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                {{ branch.isDeleted ? 'Yes' : 'No' }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Date Updated column -->
+                        <ng-container matColumnDef="updatedAt">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                                Date Updated
+                            </th>
+
+                            <td mat-cell *matCellDef="let branch">
+                                {{ branch.updatedAt ? (branch.updatedAt | date: 'yyyy-MM-dd HH:mm') : 'Never' }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Table rows -->
+                        <tr mat-header-row *matHeaderRowDef="displayedBranchColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedBranchColumns" [class.dimmed]="loadingBranches$ | async"></tr>
+                    </table>
+
+                    <div class="card card-body blank p-0 table-row" *ngIf="!branches || branches?.length === 0">
+                        <div class="inner-text f-s-14 f-w-400" [class.dimmed]="!(loadingBranches$ |async)">
+                            {{ (loadingBranches$ |async) ? 'Loading data from server...' : 'No data to display' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

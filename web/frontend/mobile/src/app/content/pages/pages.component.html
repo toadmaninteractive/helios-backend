@@ -1,0 +1,15 @@
+<ng-container *ngIf="selfLayout !== 'blank'; else selfLayoutBlank">
+    <m-menu></m-menu>
+
+    <div class="m-body">
+        <div #mContentWrapper>
+            <div class="m-content" #mContent>
+                <router-outlet></router-outlet>
+            </div>
+        </div>
+    </div>
+</ng-container>
+
+<ng-template #selfLayoutBlank>
+    <router-outlet></router-outlet>
+</ng-template>

@@ -1,0 +1,7 @@
+{application, captcha, [
+    {description, "CAPTCHA service"},
+    {vsn, "1.0.0"},
+    {modules, []},
+    {registered, []},
+    {applications, [kernel, stdlib, sasl, erl_gm]}
+]}.

@@ -1,0 +1,69 @@
+<h1 mat-dialog-title>Add new game to Helios</h1>
+
+<div mat-dialog-content>
+    <form class="m-form m-form--fit" [ngClass]="{ dimmed: loading$ | async }" *ngIf="newGame">
+        <fieldset [disabled]="loading$ | async">
+            <m-alert [(message)]="errorMessage" kind="danger"></m-alert>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-4">
+                <mat-form-field class="example-full-width">
+                    <input
+                        type="text"
+                        required
+                        matInput
+                        name="newGameId"
+                        placeholder="Game ID"
+                        [(ngModel)]="newGame.id">
+
+                    <mat-hint align="start" class="f-s-11 pt-1 block">
+                        Follow these rules to define unique game ID:<br>
+                        &ndash; it should start with lowercase latin letter<br>
+                        &ndash; it should contain lowercase latin letters and digits<br>
+                        &ndash; think twice: you will not be able to change it later
+                    </mat-hint>
+                </mat-form-field>
+            </div>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-1">
+                <mat-form-field class="example-full-width">
+                    <input
+                        type="text"
+                        required
+                        matInput
+                        name="newGameTitle"
+                        placeholder="Game title"
+                        [(ngModel)]="newGame.title">
+
+                    <mat-hint align="start" class="f-s-12 pt-1">
+                        Unique game title to identify this game
+                    </mat-hint>
+                </mat-form-field>
+            </div>
+
+            <div class="form-group m-form__group pl-0 pr-0 mb-2">
+                <mat-form-field class="example-full-width">
+                    <input
+                        type="number"
+                        required
+                        matInput
+                        name="newGamePrice"
+                        [min]="0"
+                        placeholder="Game price"
+                        [(ngModel)]="newGame.price">
+
+                    <span matPrefix>€&nbsp;</span>
+                </mat-form-field>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+<div mat-dialog-actions class="justify-content-end">
+    <button mat-button [mat-dialog-close]="null" cdkFocusInitial>No, thanks</button>
+
+    <button
+        mat-raised-button
+        color="primary"
+        [disabled]="(loading$ | async) || !isGameValid()"
+        (click)="createGame()">Add game</button>
+</div>

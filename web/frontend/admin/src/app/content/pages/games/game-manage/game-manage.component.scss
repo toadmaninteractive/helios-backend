@@ -1,0 +1,78 @@
+.m-portlet__head-text .mini {
+    margin-top: 4px !important;
+}
+
+.tools-available {
+    border-left: 1px solid #e2e5ec;
+}
+
+.m-portlet.v-fluid {
+    height: calc(100% - 28px);
+}
+
+.m-portlet__body.x-timeline {
+    height: 750px;
+}
+
+.m-form.m-form--fit.v-fluid {
+    height: calc(100% - 66px);
+}
+
+fieldset.v-fluid {
+    height: calc(100% - 96px);
+}
+
+.menu-icon {
+    margin-top: -4px;
+    transition: all 125ms linear;
+}
+
+.menu-icon:hover, .menu-icon:active {
+    color: #34bfa3 !important;
+}
+
+.permanent {
+    border: 1px solid darkseagreen;
+    border-radius: 4px;
+    padding: 0 6px 0 3px;
+    line-height: 22px;
+}
+
+.permanent * {
+    color: darkseagreen;
+}
+
+.draft {
+    border: 1px solid coral;
+    border-radius: 4px;
+    padding: 0 6px 0 3px;
+    line-height: 22px;
+}
+
+.draft * {
+    color: coral;
+}
+
+.hoverable {
+    opacity: .75;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
+.grayscale {
+    transition: all 125ms linear;
+
+    &.none {
+        -webkit-filter: grayscale(100%);
+        filter: grayscale(100%);
+        opacity: .5;
+    }
+
+    &:hover, &:active, &:focus {
+        -webkit-filter: grayscale(0%);
+        filter: grayscale(0%);
+        opacity: 1;
+    }
+}

@@ -1,0 +1,376 @@
+<mat-menu #uploadMenu="matMenu">
+    <ngx-file-drop
+        dropZoneLabel="Drop directory here"
+        (onFileDrop)="onProcessFolder($event)"
+        [multiple]="false"
+        [directory]="true">
+        <ng-template ngx-file-drop-content-tmp let-openFileSelector="openFileSelector">
+            <button mat-menu-item (click)="openFileSelector()">
+                Upload folder
+            </button>
+        </ng-template>
+    </ngx-file-drop>
+
+    <ngx-file-drop
+        dropZoneLabel="Drop file here"
+        accept=".zip"
+        (onFileDrop)="onProcessArchive($event)"
+        [multiple]="false">
+        <ng-template ngx-file-drop-content-tmp let-openFileSelector="openFileSelector">
+            <button mat-menu-item (click)="openFileSelector()">
+                Upload ZIP archive
+            </button>
+        </ng-template>
+    </ngx-file-drop>
+</mat-menu>
+
+<div class="row mb-3" *ngIf="buildPaths && pristineBuildPaths">
+    <div class="col-xl-12">
+        <mat-expansion-panel [(expanded)]="panelExpanded">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    <mat-icon class="m-menu__link-icon material metal">settings</mat-icon>
+                    <strong class="ml-1">Build settings</strong>
+                </mat-panel-title>
+
+                <mat-panel-description>
+                    <span class="red" *ngIf="!isExePathValid(pristineBuildPaths?.exePath) && !panelExpanded">
+                        <b>Path to executable</b> is invalid
+                    </span>
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <form class="m-form m-form--fit" *ngIf="build$ | async">
+                <fieldset [disabled]="(loading$ | async) || !isAllowed(accessRole.Maintainer)" [ngClass]="{ dimmed: loading$ | async }">
+                    <div class="m-portlet__body">
+                        <div class="form-group m-form__group">
+                            <mat-form-field class="example-full-width">
+                                <input
+                                    type="text"
+                                    required
+                                    matInput
+                                    name="exePath"
+                                    placeholder="Path to executable"
+                                    [(ngModel)]="buildPaths.exePath"
+                                    [matAutocomplete]="fileSuggestions">
+
+                                <mat-autocomplete #fileSuggestions="matAutocomplete">
+                                    <ng-container *ngFor="let file of exeFiles$ | async">
+                                        <mat-option [value]="file.filePath" *ngIf="file.filePath.toLocaleLowerCase().indexOf(buildPaths.exePath.toLocaleLowerCase().trim()) !== -1">
+                                            {{ file.filePath }}
+                                        </mat-option>
+                                    </ng-container>
+                                </mat-autocomplete>
+
+                                <mat-hint align="start" class="f-s-12 pt-1" [ngSwitch]="isExePathValid(buildPaths.exePath)">
+                                    <span *ngSwitchCase="true">
+                                        Path to executable to start the game
+                                    </span>
+
+                                    <span class="red" *ngSwitchCase="false">
+                                        Specified path is invalid
+                                    </span>
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-group m-form__group">
+                            <mat-form-field class="example-full-width">
+                                <input
+                                    type="text"
+                                    matInput
+                                    name="logPath"
+                                    placeholder="Path to log file"
+                                    [(ngModel)]="buildPaths.logPath">
+
+                                <mat-hint align="start" class="f-s-12 pt-1">
+                                    Either relative to game root directory or absolute
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-group m-form__group">
+                            <mat-form-field class="example-full-width">
+                                <input
+                                    type="text"
+                                    matInput
+                                    name="crashReportPath"
+                                    placeholder="Path to crash reports directory"
+                                    [(ngModel)]="buildPaths.crashReportPath">
+
+                                <mat-hint align="start" class="f-s-12 pt-1">
+                                    Either relative to game root directory or absolute
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-group m-form__group">
+                            <mat-form-field class="example-full-width">
+                                <input
+                                    type="text"
+                                    matInput
+                                    name="configPath"
+                                    placeholder="Path to config file"
+                                    [(ngModel)]="buildPaths.configPath">
+
+                                <mat-hint align="start" class="f-s-12 pt-1">
+                                    Either relative to game root directory or absolute
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-group m-form__group">
+                            <mat-form-field class="example-full-width">
+                                <textarea
+                                    type="text"
+                                    matInput
+                                    name="optionalFileMasks"
+                                    placeholder="Optional file masks"
+                                    rows="4"
+                                    [(ngModel)]="buildPaths.optionalFileMasks"></textarea>
+
+                                <mat-hint align="start" class="f-s-12 pt-1">
+                                    Examples:
+                                    <strong class="block mt-1">*.pdb</strong>
+                                    <strong class="block mt-1">/Debug</strong>
+                                </mat-hint>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="m-portlet__foot m-portlet__no-border m-portlet__foot--fit m--align-right">
+                    <div class="m-form__actions">
+                        <button
+                            mat-raised-button
+                            color="primary"
+                            [disabled]="(loading$ | async) || !buildPathsChanged()"
+                            (click)="onDraftBuildUpdate()">
+                            Update build settings
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </mat-expansion-panel>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="m-portlet m-portlet--ngviewer" *ngIf="isAllowed(accessRole.Uploader); else notAuthorized">
+            <div class="m-portlet__head compact">
+                <div class="m-portlet__head-caption">
+                    <div class="m-portlet__head-title">
+                        <h3 class="m-portlet__head-text">
+                            <button
+                                mat-raised-button
+                                color="primary"
+                                [matMenuTriggerFor]="uploadMenu"
+                                [disabled]="(build$ | async)?.isProcessing">
+                                <mat-icon [inline]="true" class="f-s-21">cloud_upload</mat-icon>
+                                <span class="inline-block ml-2 v-a-middle">Upload</span>
+                            </button>
+
+                            <button
+                                mat-raised-button
+                                color="warn"
+                                class="ml-1"
+                                [swal]="{
+                                    title: 'Confirmation',
+                                    text: 'Delete all build files permanently?',
+                                    type: 'error',
+                                    confirmButtonText: 'Delete',
+                                    customClass: { confirmButton: 'swal-danger' },
+                                    showCancelButton: true
+                                }"
+                                (confirm)="onDeleteBuildFiles(buildId)"
+                                [disabled]="(build$ | async)?.isProcessing">
+                                <mat-icon [inline]="true" class="f-s-21">delete_forever</mat-icon>
+                                <span class="inline-block ml-2 v-a-middle">Delete all files</span>
+                            </button>
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="m-portlet__head-tools">
+                    <ul class="m-portlet__nav">
+                        <li class="m-portlet__nav-item">
+                            <div class="pr-2">
+                                <mat-form-field floatLabel="never" style="width: 300px">
+                                    <input
+                                        matInput
+                                        placeholder="Type to filter..."
+                                        [value]="needle$ | async"
+                                        (keyup)="onNeedleChange($event.target.value)" />
+                                </mat-form-field>
+                            </div>
+                        </li>
+
+                        <li class="m-portlet__nav-item">
+                            <a
+                                href="javascript:void(null)"
+                                class="m-portlet__nav-link m-portlet__nav-link--icon"
+                                title="Refresh"
+                                matTooltip="Click to refresh"
+                                matTooltipPosition="above"
+                                (click)="onReload()">
+                                <i class="la la-refresh"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="m-portlet__body m-portlet__body--no-padding">
+                <div class="m-portlet__preview p-0">
+                    <table
+                        class="table-hover"
+                        mat-table
+                        [dataSource]="dataSource$ | async"
+                        matSort
+                        [matSortActive]="(sort$ | async).active"
+                        [matSortDirection]="(sort$ | async).direction"
+                        matSortDisableClear
+                        (matSortChange)="onSortChange($event)">
+                        <!-- ID column -->
+                        <ng-container [matColumnDef]="column.Id">
+                            <th mat-header-cell mat-sort-header class="cell-id" *matHeaderCellDef>
+                                ID
+                            </th>
+
+                            <td mat-cell *matCellDef="let file">
+                                <span class="poppins f-w-400">
+                                    {{ file.id }}
+                                </span>
+                            </td>
+                        </ng-container>
+
+                        <!-- File path column -->
+                        <ng-container [matColumnDef]="column.FilePath">
+                            <th mat-header-cell mat-sort-header *matHeaderCellDef>
+                                File Path
+                            </th>
+
+                            <td mat-cell *matCellDef="let file">
+                                <a
+                                    href="{{ (build$ | async)?.cdnRootUrl }}/{{ file.buildRev }}/{{ file.compressedFilePath }}"
+                                    matTooltip="Click to download"
+                                    matTooltipPosition="above">
+                                    <strong>{{ file.filePath }}</strong>
+                                </a>
+                            </td>
+                        </ng-container>
+
+                        <!-- File size column -->
+                        <ng-container [matColumnDef]="column.FileSize">
+                            <th mat-header-cell mat-sort-header class="cell-number-long" *matHeaderCellDef>
+                                File Size
+                            </th>
+
+                            <td mat-cell *matCellDef="let file">
+                                {{ file.fileSize | mPrettySize }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Compressed file size column -->
+                        <ng-container [matColumnDef]="column.CompressedFileSize">
+                            <th mat-header-cell mat-sort-header class="cell-number-long" *matHeaderCellDef>
+                                Compressed
+                            </th>
+
+                            <td mat-cell *matCellDef="let file">
+                                {{ file.compressedFileSize | mPrettySize }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Date Added column -->
+                        <ng-container [matColumnDef]="column.CreatedAt">
+                            <th mat-header-cell mat-sort-header class="cell-datetime" *matHeaderCellDef>
+                                Date Added
+                            </th>
+
+                            <td mat-cell *matCellDef="let file">
+                                {{ file.createdAt | date: 'yyyy-MM-dd HH:mm' }}
+                            </td>
+                        </ng-container>
+
+                        <!-- Actions column -->
+                        <ng-container [matColumnDef]="column.Actions">
+                            <th mat-header-cell class="cell-actions" *matHeaderCellDef>
+                                <mat-icon class="m-menu__link-icon material">more_vert</mat-icon>
+                            </th>
+
+                            <td mat-cell *matCellDef="let file">
+                                <mat-icon
+                                    class="m-menu__link-icon material clickable"
+                                    [matMenuTriggerFor]="fileMenu"
+                                    [matMenuTriggerData]="{ file: file }">
+                                    more_vert
+                                </mat-icon>
+                            </td>
+                        </ng-container>
+
+                        <!-- Table rows -->
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+                        <tr
+                            mat-row
+                            *matRowDef="let row; columns: displayedColumns"
+                            [class.dimmed]="loadingFiles$ | async">
+                        </tr>
+                    </table>
+
+                    <div class="card card-body blank p-0 table-row" *ngIf="(dataSource$ | async)?.data?.length === 0" [ngSwitch]="(build$ | async)?.isProcessing">
+                        <div class="inner-text f-s-14 f-w-400" [class.dimmed]="!(loadingFiles$ |async)" *ngSwitchCase="false">
+                            {{ (loadingFiles$ |async) ? 'Loading data from server...' : 'No data to display' }}
+                        </div>
+
+                        <div class="inner-text f-s-14 f-w-400" *ngSwitchCase="true">
+                            <ng-container *ngIf="(build$ | async) as build">
+                                Processing uploaded archive:
+                                <b>{{ (100 * build.processedSize / build.archivedSize).toFixed(1) }}% done</b>
+                                <div class="progress-fill" [style.width.%]="100 * build.processedSize / build.archivedSize"></div>
+                            </ng-container>
+                        </div>
+                    </div>
+
+                    <mat-paginator
+                        [length]="total$ | async"
+                        [pageSize]="(page$ | async).pageSize"
+                        [pageSizeOptions]="pageSizes"
+                        [pageIndex]="(page$ | async).pageIndex"
+                        (page)="onPageChange($event)"
+                        showFirstLastButtons>
+                    </mat-paginator>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<mat-menu #fileMenu="matMenu">
+    <ng-template matMenuContent let-file="file">
+        <button
+            mat-menu-item
+            [swal]="{
+                title: 'Confirm file delete',
+                text: file.filePath,
+                type: 'error',
+                confirmButtonText: 'Delete',
+                customClass: { confirmButton: 'swal-danger' },
+                showCancelButton: true
+            }"
+            (confirm)="onFileDelete(file)">
+            Delete
+        </button>
+    </ng-template>
+</mat-menu>
+
+<ng-template #notAuthorized>
+    <m-alert
+        class="f-s-14"
+        kind="danger"
+        message="You are not allowed to manage draft builds for this game"
+        [dismissible]="false">
+    </m-alert>
+</ng-template>

@@ -1,0 +1,182 @@
+<ng-container *ngIf="{
+    build: build$.asObservable() | async,
+    dataSource: dataSource$.asObservable() | async,
+    sort: sort$.asObservable() | async,
+    needle: needle$.asObservable() | async,
+    total: total$.asObservable() | async,
+    page: page$.asObservable() | async,
+    loadingFiles: loadingFiles$.asObservable() | async
+} as x">
+    <div class="row" *ngIf="isAllowed(accessRole.Uploader); else notAuthorized">
+        <div class="col-xl-12">
+            <div class="m-portlet m-portlet--ngviewer">
+                <div class="m-portlet__head compact">
+                    <div class="m-portlet__head-caption">
+                        <div class="m-portlet__head-title">
+                            <h3 class="m-portlet__head-text">
+                            </h3>
+                        </div>
+                    </div>
+
+                    <div class="m-portlet__head-tools">
+                        <ul class="m-portlet__nav">
+                            <li class="m-portlet__nav-item">
+                                <div class="pr-2">
+                                    <mat-form-field floatLabel="never" style="width: 300px">
+                                        <input
+                                            matInput
+                                            placeholder="Type to filter..."
+                                            [value]="x.needle"
+                                            (keyup)="onNeedleChange($event.target.value)" />
+                                    </mat-form-field>
+                                </div>
+                            </li>
+
+                            <li class="m-portlet__nav-item">
+                                <a
+                                    href="javascript:void(null)"
+                                    class="m-portlet__nav-link m-portlet__nav-link--icon"
+                                    title="Refresh"
+                                    matTooltip="Click to refresh"
+                                    matTooltipPosition="above"
+                                    (click)="onReload()">
+                                    <i class="la la-refresh"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="m-portlet__body m-portlet__body--no-padding">
+                    <div class="m-portlet__preview p-0">
+                        <table
+                            class="table-hover"
+                            mat-table
+                            [dataSource]="x.dataSource"
+                            matSort
+                            [matSortActive]="x.sort.active"
+                            [matSortDirection]="x.sort.direction"
+                            matSortDisableClear
+                            (matSortChange)="onSortChange($event)">
+                            <!-- File path column -->
+                            <ng-container [matColumnDef]="column.RelativePath">
+                                <th mat-header-cell mat-sort-header *matHeaderCellDef>
+                                    File Path
+                                </th>
+
+                                <td mat-cell *matCellDef="let file">
+                                    <a
+                                        href="{{ x.build?.cdnRootUrl }}{{ x.build?.cdnRootUrl?.endsWith('/') ? '' : '/' }}{{ file.relativeCompressedPath }}"
+                                        class="jetbrains f-w-500"
+                                        target="_blank"
+                                        matTooltip="Click to download"
+                                        matTooltipPosition="above">
+                                        <strong>{{ file.relativePath }}</strong>
+                                    </a>
+                                </td>
+                            </ng-container>
+
+                            <!-- File size column -->
+                            <ng-container [matColumnDef]="column.Size">
+                                <th mat-header-cell mat-sort-header class="cell-number-long" *matHeaderCellDef>
+                                    File Size
+                                </th>
+
+                                <td mat-cell *matCellDef="let file">
+                                    <span class="jetbrains f-w-500">
+                                        {{ file.size | mPrettySize }}
+                                    </span>
+                                </td>
+                            </ng-container>
+
+                            <!-- Compressed file size column -->
+                            <ng-container [matColumnDef]="column.CompressedSize">
+                                <th mat-header-cell mat-sort-header class="cell-number-long" *matHeaderCellDef>
+                                    Compressed
+                                </th>
+
+                                <td mat-cell *matCellDef="let file">
+                                    <span class="jetbrains f-w-500">
+                                        {{ file.compressedSize | mPrettySize }}
+                                    </span>
+                                </td>
+                            </ng-container>
+
+                            <!-- Compression ratio column -->
+                            <ng-container [matColumnDef]="column.CompressionRatio">
+                                <th mat-header-cell class="cell-number" *matHeaderCellDef>
+                                    Ratio
+                                </th>
+
+                                <td mat-cell *matCellDef="let file">
+                                    <ng-container *ngIf="file.compressedSize > 0 ">
+                                        <ng-container *ngIf="file.size / file.compressedSize as ratio">
+                                            <span
+                                                class="jetbrains f-w-500"
+                                                [class.red]="ratio < 1"
+                                                [class.dark-green]="ratio > 1">
+                                                {{ ratio.toFixed(2) }}
+                                            </span>
+                                        </ng-container>
+                                    </ng-container>
+                                </td>
+                            </ng-container>
+
+                            <!-- Space saving column -->
+                            <ng-container [matColumnDef]="column.SpaceSaving">
+                                <th mat-header-cell class="cell-number-long" *matHeaderCellDef>
+                                    Space Saving
+                                </th>
+
+                                <td mat-cell *matCellDef="let file">
+                                    <ng-container *ngIf="file.size > 0">
+                                        <span
+                                            class="jetbrains f-w-500"
+                                            [class.red]="(1 - (file.compressedSize / file.size)) * 100 < 0"
+                                            [class.dark-green]="(1 - (file.compressedSize / file.size)) * 100 > 0">
+                                            {{ ((1 - (file.compressedSize / file.size)) * 100).toFixed( 1) }} %
+                                        </span>
+                                    </ng-container>
+                                </td>
+                            </ng-container>
+
+                            <!-- Table rows -->
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
+                            <tr
+                                mat-row
+                                class="compact-row"
+                                *matRowDef="let row; columns: displayedColumns"
+                                [class.dimmed]="x.loadingFiles">
+                            </tr>
+                        </table>
+
+                        <div class="card card-body blank p-0 table-row" *ngIf="x.dataSource?.data?.length === 0">
+                            <div class="inner-text f-s-14 f-w-400" [class.dimmed]="!x.loadingFiles">
+                                {{ x.loadingFiles ? 'Loading data from server...' : 'No data to display' }}
+                            </div>
+                        </div>
+
+                        <mat-paginator
+                            [length]="x.total"
+                            [pageSize]="x.page.pageSize"
+                            [pageSizeOptions]="pageSizes"
+                            [pageIndex]="x.page.pageIndex"
+                            (page)="onPageChange($event)"
+                            showFirstLastButtons>
+                        </mat-paginator>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</ng-container>
+
+<ng-template #notAuthorized>
+    <m-alert
+        class="f-s-14"
+        kind="danger"
+        message="You are not allowed to view builds for this game"
+        [dismissible]="false">
+    </m-alert>
+</ng-template>

@@ -1,0 +1,73 @@
+<section class="hero is-success is-fullheight f-w-300">
+    <div class="hero-body p-x-05 p-y-0">
+        <div class="container has-text-centered">
+            <div class="column is-4 is-offset-4">
+                <h3 class="title has-text-black">
+                    <img src="./assets/app/media/img/logos/helios/helios12i32.png">
+                    Helios Mobile
+                </h3>
+
+                <div class="box m-t-3">
+                    <figure class="avatar p-b-1">
+                        <img src="./assets/app/media/img/avatars/toadman.png">
+                    </figure>
+
+                    <form>
+                        <div class="field p-b-05">
+                            <div class="control">
+                                <input
+                                    required
+                                    type="text"
+                                    name="username"
+                                    class="input is-medium f-w-300"
+                                    placeholder="Type your username"
+                                    autocomplete="off"
+                                    autofocus=""
+                                    [(ngModel)]="username">
+                            </div>
+                        </div>
+
+                        <div class="field p-b-05">
+                            <div class="control">
+                                <input
+                                    required
+                                    type="password"
+                                    name="password"
+                                    class="input is-medium f-w-300"
+                                    placeholder="Type your password"
+                                    autocomplete="off"
+                                    [(ngModel)]="password">
+                            </div>
+                        </div>
+
+                        <div class="field p-b-05" [hidden]="!signInError">
+                            <article class="message is-normal is-danger">
+                                <div class="message-body p-05">
+                                    {{ signInError }}
+                                </div>
+                            </article>
+                        </div>
+
+                        <button type="submit" [hidden]="true"></button>
+
+                        <button type="button" class="button is-block is-info is-medium is-fullwidth" [disabled]="signingIn" (click)="submit()">
+                            {{ signingIn ? 'Signing in...' : 'Sign me in' }}
+                        </button>
+                    </form>
+                </div>
+
+                <p class="has-text-grey block">
+                    <a [href]="slackSysadminDmUrl" class="forget">
+                        <span>Forgot Password?</span>
+                    </a>
+                </p>
+
+                <div class="copyright m-t-2 f-s-13px">
+                    &copy; {{ yearFrom }}
+                    <span *ngIf="yearTo">&ndash; {{ yearTo }}</span>
+                    {{ companyTitle }}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
