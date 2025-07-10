@@ -1,4 +1,4 @@
-BRANCH = master
+BRANCH = main
 DESTDIR = server
 
 all: compile generate
